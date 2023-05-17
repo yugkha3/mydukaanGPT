@@ -1,6 +1,8 @@
 import os
 from bs4 import BeautifulSoup
 from langchain.text_splitter import TokenTextSplitter
+import openai
+import json
 
 def extract_data(root_path: str) -> list:
     print(f'Extracting data from webpages at: {root_path}')
@@ -44,11 +46,54 @@ def split_data(pages: list) -> tuple:
     print('\n')
     return docs, metadata
 
+
+def get_embeddings(docs: list) -> list:
+    openai.api_key = os.environ.get('OPENAI_API_KEY')
+    
+    response = openai.Embedding.create(
+        input = docs,
+        model = 'text-embedding-ada-002'
+    )
+
+    embeddings = [record['embedding'] for record in response['data']]
+
+    with open('embeds.txt', 'w') as f1:
+        f1.write(str(embeddings))
+
+    with open('response.txt', 'w') as f0:
+        f0.write(str(response))
+    
+    return embeddings
+
+def generate_file(data: dict, filename: str) -> None:
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
+
 def main():
     root_path = './help.mydukaan.io'
     pages = extract_data(root_path)
 
     docs, metadata = split_data(pages)
 
+    embeddings = get_embeddings(docs)
+
+    db = {'vectors':[]}
+    for i in range(len(embeddings)):
+        metadata[i]['doc'] = docs[i]
+        document = {
+            'id': str(i),
+            'metadata': metadata[i],
+            'values': embeddings[i]
+        }
+        db['vectors'].append(document)
+    generate_file(db, 'db.json')
+
+    chunk_size = 30
+    chunks = [db['vectors'][i:i+chunk_size] for i in range(0, len(db['vectors']), chunk_size)]    
+    for i, chunk in enumerate(chunks):
+        filename = f'db_chunk_{i}.json'
+        generate_file({'vectors': chunk}, filename)
+
+
 if __name__ == '__main__':
-    main()
+    main()  
