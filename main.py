@@ -6,6 +6,7 @@ import openai
 import requests
 import logging
 import os
+import uvicorn
 from dotenv import load_dotenv
 load_dotenv()  
 
