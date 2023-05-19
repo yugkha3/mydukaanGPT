@@ -97,4 +97,4 @@ async def ask_question(request_data: Dict[str, str]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Error occurred while processing the question")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=os.getenv("PORT"))
