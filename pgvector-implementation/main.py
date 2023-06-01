@@ -78,10 +78,6 @@ def ask(user_question: str) -> Dict[str, Any]:
 
     return response["choices"][0]["message"]["content"]
 
-
 while True:
         user_query = input("User: ")
         print(f'GPT: {ask(user_query)} \n\n')
-
-
-
